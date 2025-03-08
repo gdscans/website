@@ -1,3 +1,5 @@
+import MangaService from '@/db/mangaService';
+
 export function register() {
 	if (process.env.DB_HOST === undefined) {
 		console.warn('Missing DB_HOST environment variable, using default \'localhost\'');
@@ -19,5 +21,14 @@ export function register() {
 	}
 	if (process.env.DB_PASS === undefined) {
 		throw new Error('Missing DB_PASS environment variable');
+	}
+
+	try {
+		new MangaService().getMangaPaged(1, 0).then((_) => {
+			console.log(`DB test successfull`);
+		});
+	} catch (err) {
+		console.error(`DB test failed`);
+		throw err;
 	}
 }

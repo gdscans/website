@@ -1,22 +1,30 @@
+import ChapterList from '@/components/chapterList';
 import PageError from '@/components/pageError';
+import Paginator from '@/components/paginator';
 import MangaService from '@/db/mangaService';
 import MangaNotFoundError from '@/errors/mangaNotFoundError';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 
-export default async function MangaInfo({params}: {
-	params: Promise<{ mangaId: string }>
+export default async function MangaInfo({params, searchParams}: {
+	params: Promise<{ mangaId: string }>,
+	searchParams: Promise<{ page: string | undefined }>,
 }) {
 	const {mangaId} = await params;
+	let {page} = await searchParams;
+	if (!page) page = "1"
 
-	if (isNaN(+mangaId)) {
+	if (isNaN(+mangaId))
 		return <PageError errorMessage="Invalid Manga ID"/>;
-	}
 
-	const mangaservice = new MangaService();
+	if (isNaN(+page))
+		return <PageError errorMessage="Invalid page"/>;
+
+
+	const mangaService = new MangaService();
 	let manga;
 	try {
-		manga = await mangaservice.getMangaBySeriesId(Number(mangaId));
+		manga = await mangaService.getMangaBySeriesId(Number(mangaId));
 	} catch (err: unknown) {
 		if (err instanceof MangaNotFoundError) {
 			return notFound();
@@ -50,36 +58,8 @@ export default async function MangaInfo({params}: {
 						<p>{manga.genres.join(', ')}</p>
 					</div>
 				</div>
-				<div className="w-1/2 mx-auto text-3xl font-bold mt-16">
-					<h1>Chapters</h1>
-					<hr className="h-1 my-2"/>
-					<div className="flex-1 font-normal text-lg">
-						<div className="grid grid-cols-6 grid-flow-row gap-4 hover:bg-white/15 rounded-lg">
-							<p className="font-thin ml-4">204</p>
-							<p className="col-span-4">This epic chapter that definitely exists</p>
-							<p className="text-white/25">25 Feb, 2025</p>
-						</div>
-						<div className="grid grid-cols-6 grid-flow-row gap-4 hover:bg-white/15 rounded-lg">
-							<p className="font-thin ml-4">203</p>
-							<p className="col-span-4">Wow this is so cool</p>
-							<p className="text-white/25">25 Feb, 2025</p>
-						</div>
-						<div className="grid grid-cols-6 grid-flow-row gap-4 hover:bg-white/15 rounded-lg">
-							<p className="font-thin ml-4">202</p>
-							<p className="col-span-4">The Unexpected Journey of a Ordinary Schoolboy Who Was Transported
-								to a World of Magic and Monsters, Where He Must Team Up with Legendary Heroes, Solve
-								Mysteries of a Lost Kingdom, and Discover His True Destiny as the Chosen One Who Can
-								Either Save or Destroy Everything while Completing His Harem in This Magical World</p>
-							<p className="text-white/25">25 Feb, 2025</p>
-						</div>
-						<div className="grid grid-cols-6 grid-flow-row gap-4 hover:bg-white/15 rounded-lg">
-							<p className="font-thin ml-4">201.5</p>
-							<p className="col-span-4">Christmas, just a week away! Can you believe it? I'm so happy with
-								this information</p>
-							<p className="text-white/25">25 Feb, 2025</p>
-						</div>
-					</div>
-				</div>
+				<ChapterList mangaId={Number(mangaId)} count={10} page={Number(page) ?? 1} />
+				<Paginator page={Number(page)} pageCount={Math.ceil(manga.chapterCount / 10)} />
 			</main>
 		</div>
 	);
